@@ -6,7 +6,24 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-def get_temps_reel_openweather(ville, lat, lon, api_key):
+def get_temps_reel_openweather(ville, lat, lon, api_key) -> bool:
+    """
+    Extrait les données météo actuel d'une ville
+    depuis l'API OpenWeather les sauvegarde ou les ajoute à 
+    un fichier CSV historique de la ville.
+    
+    Args:
+        ville : Nom de la ville à interroger
+        lat : latitude de la ville à interroger
+        lon : longitude de la ville à interroger
+        api_key : Clé d'API OpenWeather
+        
+    Returns:
+        bool: True si l'extraction réussit, False sinon
+        
+    Exemple:
+        >>> get_temps_reel_openweather("Londres", "51.50", "0.12", "abc123")
+    """
     try:
         url = "https://api.openweathermap.org/data/2.5/weather"
         params = {
@@ -18,14 +35,20 @@ def get_temps_reel_openweather(ville, lat, lon, api_key):
         }
 
         r = requests.get(url, params=params, timeout=10)
-        r.raise_for_status()
+        r.raise_for_status() # Lève une exception si erreur HTTP
         d = r.json()
 
+        # Création d’un DataFrame avec les champs utiles du jour
         df_now = pd.DataFrame([{
             "time": datetime.utcnow().strftime("%Y-%m-%d"),
             "temperature_2m_min": d["main"]["temp_min"],
             "temperature_2m_max": d["main"]["temp_max"],
             "precipitation_sum": d.get("rain", {}).get("1h", 0),
+            "humidity": d["main"]["humidity"],          
+            "pressure": d["main"]["pressure"],          
+            "wind_speed": d["wind"]["speed"], 
+            "latitude": lat,
+            "longitude": lon,
             "ville": ville,
             "source": "openweather"
         }])
