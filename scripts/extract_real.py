@@ -24,6 +24,7 @@ def get_temps_reel_openweather(ville, lat, lon, api_key) -> bool:
     Exemple:
         >>> get_temps_reel_openweather("Londres", "51.50", "0.12", "abc123")
     """
+    
     try:
         url = "https://api.openweathermap.org/data/2.5/weather"
         params = {

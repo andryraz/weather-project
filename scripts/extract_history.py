@@ -10,14 +10,19 @@ logging.basicConfig(level=logging.INFO)
 def get_historique_openmeteo(ville, lat, lon, start, end) -> bool:
     """
     Extrait les données historique météo (quotidien + horaire) d'une ville
-    depuis l'API Open‑Meteo
+    depuis l'API OpenMeteo. Puis les sauvegardes dans un fichier csv pour 
+    chaque ville.
+
+    Il est a noter que certaines données provenant d'OpenMeteo sont horaires 
+    mais pas journalières donc on est obligé de faire des calcules moyennes 
+    horaires pour avoir des données journalières.
     
     Args:
         ville : Nom de la ville à interroger
         lat : latitude de la ville à interroger
         lon : longitude de la ville à interroger
-        start : Date de debut des donnees a recuperer au format 'YYYY-MM-DD' pour l'organisation
-        end : Date de fin des donnees a recuperer au format 'YYYY-MM-DD' pour l'organisation
+        start : Date de debut des donnees a recuperer au format 'YYYY-MM-DD' 
+        end : Date de fin des donnees a recuperer au format 'YYYY-MM-DD'
         
     Returns:
         bool: True si l'extraction réussit, False sinon
@@ -86,22 +91,20 @@ def get_historique_openmeteo(ville, lat, lon, start, end) -> bool:
         df["source"] = "open-meteo"
         df["latitude"] = lat
         df["longitude"] = lon
-        df["time"] = pd.to_datetime(df["time"])  # retransforme en datetime
-
-
+        df["time"] = pd.to_datetime(df["time"])  
 
         # Créer le dossier de sortie s’il n’existe pas
         os.makedirs("data/raw/history", exist_ok=True)
 
         # Sauvegarde dans un fichier CSV spécifique à la ville
-        safe_ville = ville.replace(" ", "_").lower()  # nom de fichier propre
+        safe_ville = ville.replace(" ", "_").lower()  
         chemin = f"data/raw/history/meteo_{safe_ville}.csv"
         df.to_csv(chemin, index=False)
 
         logging.info(f"Données enregistrées pour {ville} dans {chemin}")
         return df
 
-    
+
     except requests.exceptions.RequestException as e:
         logging.error(f"Erreur réseau/API pour {ville}: {str(e)}")
     except KeyError as e:

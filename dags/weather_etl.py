@@ -4,7 +4,7 @@ from airflow.models import Variable
 from datetime import datetime
 import logging
 
-# Import fonctions
+# Import des fonctions
 from comparing_weather.scripts.extract_history import get_historique_openmeteo
 from comparing_weather.scripts.extract_real import get_temps_reel_openweather
 from comparing_weather.scripts.transform import (
@@ -43,10 +43,10 @@ with DAG(
 
     def etape_1_historique():
         for ville, (lat, lon) in villes.items():
-            get_historique_openmeteo(ville, lat, lon, start="2020-01-01", end="2025-07-02")
+            get_historique_openmeteo(ville, lat, lon, start="2020-01-01", end="2025-07-03")
 
     def etape_2_temps_reel():
-        api_key = Variable.get("API_KEY") 
+        api_key = Variable.get("API_KEY") # cle api(OpenWeather) dans variable d'environnement
         for ville, (lat, lon) in villes.items():
             get_temps_reel_openweather(ville, lat, lon, api_key)
 
@@ -85,6 +85,6 @@ with DAG(
 
     # ========== Orchestration ==========
     # La tâche d'extraction des donnees historiques s'exécute 
-    # puis l'extraction des donnees actuels avec fusion des donnees
-    # suivie de la transformation
+    # suivie de l'extraction des donnees actuels avec fusion des donnees
+    # et enfin la transformation
     t1_historique >> t2_temps_reel >> t3_star_schema

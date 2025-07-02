@@ -10,16 +10,23 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)       # Crée le dossier si besoin
 # Lecture de tous les fichiers météo de ville avec traitement
 def charger_toutes_villes():
 
+    """
+    Transforme les données météo en schéma en étoile simplifié avec :
+    - Une table de faits (mesures météo)
+    - Une dimension ville 
+    - Une dimension source
+    - Une dimension date
+
+    """
+
     all_files = [f for f in os.listdir(INPUT_DIR) if f.endswith(".csv")]
     dfs = []
     for f in all_files:
         path = os.path.join(INPUT_DIR, f)
         df = pd.read_csv(path)
 
-        # Remplacer les NaN par 0 AVANT traitement
         df.fillna(0, inplace=True)
 
-        # Limiter les décimales à 2
         colonnes_numeriques = [
             "temperature_2m_min", "temperature_2m_max",
             "precipitation_sum", "humidity", "pressure", "wind_speed"
