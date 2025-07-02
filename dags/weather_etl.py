@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.models import Variable
 from datetime import datetime
 import logging
 
@@ -22,26 +23,30 @@ default_args = {
 }
 
 with DAG(
-    'weather_pipeline_dag',
+    dag_id='weather_pipeline_dag',
     default_args=default_args,
     schedule='@daily',
     catchup=False,
-    max_active_runs=1,  
+    max_active_runs=1,
 ) as dag:
-
+    
+    # Villes à traiter
     villes = {
-        "Paris": (48.85, 2.35),
         "Antananarivo": (-18.88, 47.51),
-        "New York": (40.71, -74.00)
+        "New York": (40.71, -74.00),
+        "Londres": (51.50, 0.12),
+        "Tokyo": (35.68, 139.69),
+        "Dubai": (25.20, 55.27),
+        "Sydney": (33.86, 151.20),
+        "Moscou": (55.75, 37.61)
     }
-
-    api_key = "43b6dc83753970c6271c339c12d3bb6e"
 
     def etape_1_historique():
         for ville, (lat, lon) in villes.items():
-            get_historique_openmeteo(ville, lat, lon, start="2023-01-01", end="2025-06-18")
+            get_historique_openmeteo(ville, lat, lon, start="2020-01-01", end="2025-07-02")
 
     def etape_2_temps_reel():
+        api_key = Variable.get("API_KEY") 
         for ville, (lat, lon) in villes.items():
             get_temps_reel_openweather(ville, lat, lon, api_key)
 
@@ -62,6 +67,7 @@ with DAG(
 
         logging.info("Modèle en étoile mis à jour.")
 
+    # Déclaration des tâches
     t1_historique = PythonOperator(
         task_id='recuperer_historique_openmeteo',
         python_callable=etape_1_historique
@@ -77,5 +83,8 @@ with DAG(
         python_callable=etape_3_star_schema
     )
 
-    # Dépendances
+    # ========== Orchestration ==========
+    # La tâche d'extraction des donnees historiques s'exécute 
+    # puis l'extraction des donnees actuels avec fusion des donnees
+    # suivie de la transformation
     t1_historique >> t2_temps_reel >> t3_star_schema
